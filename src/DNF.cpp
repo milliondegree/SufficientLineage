@@ -49,9 +49,11 @@ void DNF::setLambda(map<string, double> p){
         int si = dnf_vector[i].size();
         bool hasIDB = false;
         for (int j = 0; j < si; j++) {
+	    cout << dnf_vector[i][j] << ' ';
             if (p.find(dnf_vector[i][j]) != p.end()) {
                 mono[dnf_vector[i][j]] = p[dnf_vector[i][j]];
             } else {
+	        // cout << dnf_vector[i][j] << endl;
                 hasIDB = true;
                 break;
             }
@@ -82,7 +84,9 @@ void DNF::setProbs(map<string, double> p) {
 
 void
 DNF::ConvertToDNF() {
+    cout << "start building DNF" << endl;
     BuildTree(root);
+    cout << "build success" << endl;
     ConvertToVector(root);
 }
 
@@ -125,6 +129,17 @@ DNF::IsVariable(string str) {
     return true;
 }
 
+bool checkOr(string str) {
+    int count = 0;
+    for (int i=0; i<str.size(); i++) {
+    	if (str[i]=='(') count++;
+	else if (str[i]==')') count--;
+
+	if (count==0 && str[i]=='+') return true;
+    }
+    return false;
+}
+
 TreeNode*
 DNF::BuildTree(TreeNode *node) {
     RemoveRedundant(node);
@@ -134,6 +149,15 @@ DNF::BuildTree(TreeNode *node) {
         string key = ConvertSetToString(set);
         node->maps[key] = set;
         return node;
+    }
+    char op;
+    if (checkOr(node->str)) {
+	op = '+';
+	node->op = OR;
+    }
+    else {
+	op = '*';
+	node->op = AND;
     }
     int parenthesis_count = 0;
     int start = 0;
@@ -145,21 +169,15 @@ DNF::BuildTree(TreeNode *node) {
         }
 
         //cout << i << " " << parenthesis_count << endl;
-        if ((i == node->str.length()) || (parenthesis_count == 0 && (node->str[i] == '+' || node->str[i] == '*'))) {
-            //cout<<"start = "<<start<<endl;
-            //cout<<"i = "<<i<<endl;
-            //cout<<"substring = "<<(node->str).substr(start, i-start)<<endl;
+        if ((i == node->str.length()) || (parenthesis_count == 0 && node->str[i] == op)) {
+            // cout<<"start = "<<start<<endl;
+            // cout<<"i = "<<i<<endl;
+            // cout<<"substring = "<<(node->str).substr(start, i-start)<<endl;
             node->children.push_back(new TreeNode((node->str).substr(start, i-start)));                        
             start = i + 1;
-            if (i < node->str.length()) {
-                if (node->str[i] == '+') {
-                    node->op = OR;
-                } else {
-                    node->op = AND;
-                }
-            }
         }
     }
+    // cout << endl;
     if (node->children.size() == 0) {
         return node;
     }
@@ -200,6 +218,13 @@ DNF::BuildTree(TreeNode *node) {
             node->maps = new_map;
         }
     }
+    // map<string, set<string>> m = node->maps;
+    // cout << node->str << endl;
+    // cout << node->maps.size() << endl;
+    // for (auto it : m) {
+    //     cout << it.first << ' ';
+    // }
+    // cout << endl << endl;
     return node;
 }
 

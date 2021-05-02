@@ -15,6 +15,8 @@
 #include <iostream>
 #include <cctype>
 #include <ctime>
+#include <unordered_map>
+#include <assert.h>
 #include "Load.h"
 #include "DNF.h"
 #include "Suff.h"
@@ -23,8 +25,8 @@
 
 using namespace std;
 
-#define ProvPath "/home/shaobo/Programs/CLionProjects/SuffLineage/data/prov/prov-sample-100-hop7.txt"
-#define DataPath "/home/shaobo/Programs/CLionProjects/SuffLineage/data/trust/500_nodes_all.csv"
+// #define ProvPath "./data/"
+///#define DataPath "/home/shaobo/Programs/CLionProjects/SuffLineage/data/trust/500_nodes_all.csv"
 
 /*
  * main method to compute the sufficient lineage given a k-mDNF formula and 
@@ -32,21 +34,48 @@ using namespace std;
  */
 int main(int argc, char** argv) {
 
+    unordered_map<string, string> args;
+    vector<string> argvs;
+    for (int i=0; i<argc; i++) {
+        argvs.push_back(string(argv[i]));
+    }
+    for (int i=1; i<argc; i+=2) {
+        assert(i+1<argc);
+	if (argvs[i]=="-p") {
+	    args["p"] = argvs[i+1];
+	}
+	else if (argvs[i]=="-d") {
+	    args["d"] = argvs[i+1];
+	}
+	else if (argvs[i]=="-e") {
+	    args["e"] = stod(argvs[i+1]);
+	}
+    }
+
+    string DataPath = args["d"];
+    string ProvPath = args["p"];
+
     Load load(DataPath, ProvPath);
 
     cout << "------------------------------" << endl;
+    
+    string prov = load.getProv();
+    map<string, double> probs = load.getProbs();
 
     DNF dnf(load.getProv(), load.getProbs());
+
     cout<<"DNF number of monomials: "<<dnf.getLambda().size()<<endl;
     // dnf.ShowStructure();
 
     cout << "------------------------------" << endl;
 
-    double errRate = 0.01; // approximation error rate
+    // double errRate = 0.01; // approximation error rate
+    double errRate = atof(args["e"].c_str());
     Suff suff(dnf.getLambda(), errRate);
-    // print results
+
     cout << "The original DNF is: " << endl;
-    // suff.printDNF(suff.getOrigDNF());
+    suff.printDNF(suff.getOrigDNF());
+    // print results
     cout << "Original DNF size: " << suff.getOrigDNF().size() << endl;
     cout << "Original Probability = " << suff.getOrigProb() << endl;
     cout << endl;
