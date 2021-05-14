@@ -85,6 +85,7 @@ int main(int argc, char** argv) {
     cout << "SuffProv Probability = " << suff.getSuffProb() << endl;
 
     cout << "------------------------------" << endl;
+    exit(0);
 
     Influ influ(suff.getOrigDNF(), suff.getOrigProb());
     cout << "Original lambda influence: " << endl;
